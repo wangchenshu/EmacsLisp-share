@@ -1,0 +1,199 @@
+* [[https://zh.wikipedia.org/wiki/Emacs_Lisp][Emacs Lisp]]
+
+** Emacs Lisp 是什麼
+
+Emacs Lisp，一種直譯式的腳本語言，為LISP的方言之一，[[https://zh.wikipedia.org/wiki/Emacs][GNU Emacs]] 與 [[https://zh.wikipedia.org/wiki/XEmacs][XEmacs]] 文字編輯器都使用這個程式語言來擴展他們的功能。
+它的直譯器是以C語言來實作的。它受到Maclisp的影響很大，但是跟 [[https://zh.wikipedia.org/wiki/Common_Lisp][Common Lisp]] 與Scheme有所不同。
+
+Lisp，最初被拼為LISP，一個歷史悠久的電腦程式語言家族。最早由約翰·麥卡錫在1958年基於λ演算創造，演化至今，是歷史第二悠久的高階語言，
+僅次於Fortran，也是第一個函數語言程式設計語言。
+
+** 經典範例
+#+NAME: hello.el
+#+BEGIN_SRC elisp
+
+(message "Hello, World!") ; 切換到 *scratch* mode and Press C-x C-e 或 M-x ielm
+
+#+END_SRC
+
+** Emacs Lisp 基礎
+*** 資料型態
+**** number
+#+NAME: number.el
+#+BEGIN_SRC elisp
+
+#b101100 ; => t 二進制
+#o54 ; => t 八進制
+#x2c ; => t 十六進制
+#24r1k ; => t 二十四進制
+;; 最大是36 ，是因為只有0-9和A-Z 36個字符來表示數字。但是我想基本上不會有人會用到的emacs的這個特性。
+;; 範例
+(+ 1 2) ; => 3
+(= 1 1) ; => t 或 (eql 1 1)
+(integerp 1) ; => t
+
+#+END_SRC
+
+**** char
+#+NAME: char.el
+#+BEGIN_SRC elisp
+
+?A ; => 65 (字元的讀入是在字元前面加上問號)
+?a ; => 97
+?\r ; => 13
+
+#+END_SRC
+
+**** string
+
+#+NAME: string.el
+#+BEGIN_SRC elisp
+
+"123" ; => "123"
+(string-to-number "123") ; => 123
+(number-to-string 123) ; => "123"
+(format "%s" "hello") ; => "hello"
+(string= "hello" "hello") ; => t or (string-equal "hello" "hello")
+
+#+END_SRC
+
+**** cons cell
+cons cell 也就是 construction of cells
+如果從概念上來說，cons cell 其實非常簡單的，就是兩個有順序的元素。第一個叫CAR ，第二個就CDR。CAR和CDR名字來自於Lisp的。
+
+它最初在IBM 704機器上的實現。在這種機器有一種取址模式，使人可以訪問一個存儲地址中的"地址（address）"部分和"減量（decrement）"部分。 
+CAR 指令用於取出地址部分，表示(Contents of Address part of Register)，CDR 指令用於取出地址的減量部分(Contents of the Decrement part of Register)。
+cons cell 也就是 construction of cells。 car 函數用於取得 cons cell 的 CAR 部分，cdr 取得cons cell 的 CDR 部分。
+cons cell 如此簡單，但是它卻能衍生出許多高級的數據結構，比如鍊表，樹，關聯表等等。
+
+cons cell 的讀入語法是用 . 分開兩個部分 例如: '(1 . 2)
+
+#+NAME: cons_cell.el
+#+BEGIN_SRC elisp
+
+(cons 1 2) ; (1 . 2)
+(car (cons 1 2)) ; 1
+(cdr (cons 1 2)) ; 2
+
+#+END_SRC
+
+**** list
+#+NAME: list.el
+#+BEGIN_SRC elisp
+
+(list 1 2 3)  ; => (1 2 3)
+(reverse (list 1 2 3)) ; => (3 2 1)
+(mapcar '1+ '(1 2 3)) ; => (2 3 4)
+(setq foo '(1 2 3)) ; => (1 2 3)
+(push '0 foo) ; => (0 1 2 3)
+(pop foo) ; => 0
+(remq '0 foo) ; => (1 2 3) 返回刪除後列表的拷貝。
+
+#+END_SRC
+
+**** Array
+Vector: 可以看成是一種通用的數組，它的元素可以是任意的對象。
+
+#+NAME: array.el
+#+BEGIN_SRC elisp
+
+[1 2 3] ;  => [1 2 3]
+(length '[1 2 3]) ; => 3
+
+(make-vector 8 ‘a) ; => [a a a a a a a a]
+(fillarray (make-vector 3 'Z) 5) ; => [5 5 5] fillarray 可以把整個數組用某個元素填充。
+
+#+END_SRC
+
+**** symbol
+符號是有名字的對象。可能這麼說有點抽象。作個不恰當的比方，符號可以看作是 C 語言裡的指針。
+通過符號你可以得到和這個符號相關聯的信息，比如值，函數，屬性列表等等。
+
+*** 變量
+#+NAME: param.el
+#+BEGIN_SRC elisp
+
+(setq num 1) ; => 1
+(defvar num2 2) ; => num2
+
+#+END_SRC
+它與 setq 所不同的是，如果變量在聲明之前，這個變量已經有一個值的話，用 defvar 聲明的變量值不會改變成聲明的那個值。
+區域變量  let 和 let*
+let* 和 let 的使用形式完全相同，唯一的區別是在 let* 聲明中就能使用前面聲明的變量
+
+*** 函數
+elisp 中定義一個函數是用這樣的形式：
+
+#+NAME: function_sampel.el
+#+BEGIN_SRC elisp
+
+(defun function_name (arguments-list)
+  "document string"
+  body)
+
+(defun hello (name)
+  "This is a function will say hello to you"
+  (message "hello, %s" name))
+
+(hello "walter") ; => "hello, walter"
+
+#+END_SRC
+
+*** lambda
+它的形式和 defun 是完全一樣
+
+#+NAME: lambda_sampel.el
+#+BEGIN_SRC elisp
+
+(lambda (arguments-list)
+  "document string"
+  body)
+
+;; 調用方式如下:
+(funcall (lambda (name)
+           (message "hello, %s" name)) "walter")
+
+"hello, walter"
+
+#+END_SRC
+
+*** 控制結構 (條件判斷，循環)
+**** 條件判斷
+
+#+NAME: if_sampel.el
+#+BEGIN_SRC elisp
+
+(if condition
+  then
+else)
+
+(defun my-max(a b)
+  (if (> a b)
+    a b))
+my-max
+
+ELISP> (my-max 2 4)
+4 (#o4, #x4, ?\C-d)
+
+#+END_SRC
+
+**** 循環
+
+#+NAME: while_sampel.el
+#+BEGIN_SRC elisp
+
+(while condition
+  body)
+
+(defun factorial (n)
+  (let ((res 1))
+    (while (> n 1)
+      (setq res (* res n)
+            n (- n 1)))
+    res))
+
+factorial
+ELISP> (factorial 10)
+3628800 (#o15657400, #x375f00)
+
+#+END_SRC
